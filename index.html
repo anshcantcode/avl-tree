@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AVL Tree — Always in Balance · Ansh</title>
+<meta name="author" content="Ansh">
+<meta property="og:title" content="AVL Tree — Always in Balance">
+<meta property="og:description" content="Explore AVL trees through live, step-by-step animations. An open-source visualizer by Ansh, powered by C and WebAssembly.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://anshcantcode.github.io/avl-tree/">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta name="description" content="An AVL tree, animated step by step: insert, delete, search and traverse, with every comparison, height update and rotation explained. The algorithm runs in C, compiled to WebAssembly.">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script>document.documentElement.classList.add('js');setTimeout(function(){var h=document.documentElement;if(!h.classList.contains('is-ready'))h.classList.add('no-reveal')},3000)</script>
+</head>
+<body>
+<a class="skip" href="#visualiser">Skip to the visualiser</a>
+
+<header class="nav">
+  <div class="nav-bar">
+    <a class="nav-mark" href="#top" aria-label="AVL tree, back to the top">AVL tree</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#rule">Rule</a>
+      <a href="#idea">Why</a>
+      <a href="#visualiser">Try it</a>
+      <a href="#rotations">Rotations</a>
+      <a href="#complexity">Cost</a>
+      <a href="#hood">C code</a>
+    </nav>
+    <a class="btn btn--small nav-cta" href="#visualiser">Insert a key</a>
+  </div>
+</header>
+
+<main>
+
+<!-- 1. masthead: a real tree beside the live one -->
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="mast">
+    <figure class="mast-photo" aria-hidden="true">
+      <img class="fade-a" src="assets/web/g-tree.jpg" alt="" width="1000" height="1000" fetchpriority="high">
+      <img class="fade-b" src="assets/web/g-banyan.jpg" alt="" width="1000" height="1000">
+    </figure>
+    <div class="mast-stage">
+      <svg class="hero-svg tv--hero" id="hero-svg" role="img" aria-label="A live AVL tree: seven keys sit level, then 80, 90, 5, 1, 25 and 27 go in. Three times a node tips, and a rotation puts the tree back, four levels tall."></svg>
+      <p class="hero-step" id="hero-step" aria-hidden="true">seven keys, level</p>
+    </div>
+  </div>
+  <div class="hero-copy axis">
+    <div class="side">
+      <p class="side-note">Named for Georgy Adelson-Velsky and Evgenii Landis, who published it in 1962.</p>
+      <ul class="legend" aria-label="How a node shows its balance">
+        <li><i class="dot"></i>in balance</li>
+        <li><i class="dot dot--tip"></i>tipped, about to rotate</li>
+      </ul>
+    </div>
+    <div class="main">
+      <h1 id="hero-title" class="display">Always in<br>balance.</h1>
+      <p class="lead">A binary search tree that rotates itself back into balance after every insert and delete. This one runs in C, and you can watch every step.</p>
+      <a class="btn" href="#visualiser">Insert a key</a>
+    </div>
+  </div>
+</section>
+
+<!-- 2. the rule, in four figures -->
+<section class="facts section" id="rule" aria-labelledby="rule-title">
+  <div class="facts-top">
+    <h2 id="rule-title" class="h2 h2--light reveal">One rule,<br>at every node.</h2>
+    <p class="facts-note reveal">The heights of a node&rsquo;s two subtrees may differ by one at most. When an insert or a delete breaks that, a rotation puts it right.</p>
+  </div>
+  <dl class="facts-row">
+    <div class="fact reveal"><dt>Published by Adelson-Velsky and Landis</dt><dd>1962</dd></div>
+    <div class="fact reveal"><dt>The most any node may lean</dt><dd>&plusmn;1</dd></div>
+    <div class="fact reveal"><dt>The tallest it can grow, for n keys</dt><dd>1.44 log n</dd></div>
+    <div class="fact reveal"><dt>Search, insert and delete</dt><dd>O(log n)</dd></div>
+  </dl>
+  <figure class="facts-photo reveal">
+    <img src="assets/web/g-scale.jpg" alt="A brass balance scale with two pans hanging level" width="1000" height="1000" loading="lazy">
+    <figcaption>Balance scale, Henry N. Hooper and Company, Boston, about 1850.</figcaption>
+  </figure>
+</section>
+
+<!-- 3. the same keys into a plain search tree and into an AVL tree -->
+<section class="race section" id="idea" aria-labelledby="race-title">
+  <header class="sec-head axis">
+    <div class="side"><p class="side-note reveal">Keys 1 to 15, inserted in order, into both trees at once.</p></div>
+    <div class="main">
+      <h2 id="race-title" class="h2 reveal">Same keys.<br>Different trees.</h2>
+      <p class="sec-line reveal">Give a plain binary search tree sorted keys and it grows into a stick fifteen levels tall. The AVL tree takes the same keys, rotates as it goes, and ends four levels tall.</p>
+    </div>
+  </header>
+  <div class="race-grid">
+    <figure class="pane reveal" data-pane="bst">
+      <svg class="pane-svg tv--pane" id="race-bst" role="img" aria-label="A plain binary search tree taking the keys 1 to 15 in order and growing into a single leaning line fifteen levels tall."></svg>
+      <figcaption class="pane-cap">
+        <span class="pane-name">Plain search tree</span>
+        <span class="pane-h"><b id="race-h-bst">0</b> levels</span>
+      </figcaption>
+    </figure>
+    <figure class="pane reveal" data-pane="avl">
+      <svg class="pane-svg tv--pane" id="race-avl" role="img" aria-label="An AVL tree taking the same keys, rotating as it goes, and ending four levels tall."></svg>
+      <figcaption class="pane-cap">
+        <span class="pane-name">AVL tree</span>
+        <span class="pane-h"><b id="race-h-avl">0</b> levels</span>
+      </figcaption>
+    </figure>
+  </div>
+  <div class="race-bar">
+    <p class="race-now" id="race-now" aria-hidden="true">1 to 15, in order</p>
+    <button class="btn btn--quiet btn--small" type="button" id="race-replay">Replay</button>
+  </div>
+</section>
+
+<!-- 4. the visualiser -->
+<section class="vz section" id="visualiser" aria-labelledby="vz-heading">
+  <header class="sec-head axis">
+    <div class="side"><p class="side-note reveal">Click any node to pick its key, then delete it or search for it.</p></div>
+    <div class="main">
+      <h2 id="vz-heading" class="h2 reveal">Insert a key.<br>Watch it settle.</h2>
+      <p class="sec-line reveal">Type one key or several, then step through what the C code did: each comparison, each height update, each rotation. Delete, search and the four traversals work the same way.</p>
+    </div>
+  </header>
+
+  <div class="dock" data-ui>
+    <form class="vz-form" id="vz-form" autocomplete="off">
+      <label class="sr-only" for="vz-key">Key or keys, from 0 to 999</label>
+      <input class="vz-input" id="vz-key" name="key" inputmode="numeric" placeholder="27, or 10 20 30" aria-describedby="vz-note">
+      <div class="vz-ops seg-group" role="group" aria-label="Operation">
+        <button class="seg seg--primary" type="submit" data-op="insert">Insert</button>
+        <button class="seg" type="submit" data-op="delete">Delete</button>
+        <button class="seg" type="submit" data-op="search">Search</button>
+      </div>
+    </form>
+    <div class="vz-trav seg-group" role="group" aria-label="Traverse the tree">
+      <button class="seg" type="button" data-trav="0">In-order</button>
+      <button class="seg" type="button" data-trav="1">Pre-order</button>
+      <button class="seg" type="button" data-trav="2">Post-order</button>
+      <button class="seg" type="button" data-trav="3">Level-order</button>
+    </div>
+    <div class="vz-more">
+      <label class="sr-only" for="vz-example">Load an example</label>
+      <select class="vz-select" id="vz-example">
+        <option value="">Examples</option>
+        <option value="root">ten keys, then 27</option>
+        <option value="ll">left-left: 30, 20, 10</option>
+        <option value="rr">right-right: 10, 20, 30</option>
+        <option value="lr">left-right: 30, 10, 20</option>
+        <option value="rl">right-left: 10, 30, 20</option>
+        <option value="sorted">10 to 70, in order</option>
+        <option value="del">delete 20, two children</option>
+        <option value="random">twelve random keys</option>
+      </select>
+      <button class="icon-btn" type="button" id="vz-clear" aria-label="Clear the tree"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+  <p class="vz-note" id="vz-note" role="status"></p>
+
+  <div class="vz-grid">
+    <div class="vz-stage" id="vz-stage" data-ui>
+      <svg class="vz-svg tv--main" id="vz-svg" role="img" aria-label="The AVL tree. Each node shows its key; the small number beside it is its balance, and a node that tips turns red."></svg>
+      <div class="vz-stage-top">
+        <ul class="legend legend--small" aria-label="The small number beside a node is its balance">
+          <li><i class="dot"></i>balance &minus;1, 0, +1</li>
+          <li><i class="dot dot--tip"></i>&plusmn;2, tipped</li>
+        </ul>
+        <button class="chip-toggle" type="button" id="vz-heights" aria-pressed="false">Heights</button>
+      </div>
+    </div>
+
+    <div class="vz-now" data-ui>
+      <div class="vz-story is-in" id="vz-story" aria-live="polite">
+        <p class="vz-title" id="vz-title">ten keys, then 27</p>
+        <p class="vz-body" id="vz-body">Loading the C module.</p>
+      </div>
+      <dl class="vz-counters">
+        <div><dt>comparisons</dt><dd id="vz-comp">0</dd></div>
+        <div><dt>rotations</dt><dd id="vz-rot">0</dd></div>
+        <div><dt>height</dt><dd id="vz-h">0</dd></div>
+      </dl>
+    </div>
+
+    <div class="vz-code" data-ui>
+      <p class="vz-code-name" id="vz-code-name">insert_at, in avl.c</p>
+      <div class="vz-code-scroll"><pre><code id="vz-code"></code></pre></div>
+    </div>
+
+    <div class="player" data-ui>
+      <div class="vz-buttons">
+        <button class="pbtn" type="button" id="vz-replay" aria-label="Play from the start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.2 13.5a7 7 0 1 0 1.9-6.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M6.2 3.6v4.2h4.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="pbtn" type="button" id="vz-back" aria-label="Step back"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5.5" width="2.6" height="13" rx="1.3"/><path d="M19 6.6v10.8a1 1 0 0 1-1.55.83L9.6 12.83a1 1 0 0 1 0-1.66l7.85-5.4A1 1 0 0 1 19 6.6z"/></svg></button>
+        <button class="pbtn pbtn--play" type="button" id="vz-play" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.8v12.4a1.1 1.1 0 0 0 1.68.93l9.7-6.2a1.1 1.1 0 0 0 0-1.86l-9.7-6.2A1.1 1.1 0 0 0 8 5.8z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg></button>
+        <button class="pbtn" type="button" id="vz-next" aria-label="Step forward"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="16.4" y="5.5" width="2.6" height="13" rx="1.3"/><path d="M5 6.6v10.8a1 1 0 0 0 1.55.83l7.85-5.4a1 1 0 0 0 0-1.66l-7.85-5.4A1 1 0 0 0 5 6.6z"/></svg></button>
+        <button class="pbtn" type="button" id="vz-end" aria-label="Skip to the end"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7v10a.9.9 0 0 0 1.4.75L11.5 13v4a.9.9 0 0 0 1.4.75l6.9-5a.9.9 0 0 0 0-1.5l-6.9-5A.9.9 0 0 0 11.5 7v4L4.9 6.25A.9.9 0 0 0 3.5 7z"/><rect x="19.4" y="5.5" width="2.2" height="13" rx="1.1"/></svg></button>
+      </div>
+      <div class="vz-scrub">
+        <span class="vz-ticks" id="vz-ticks" aria-hidden="true"></span>
+        <input class="range" type="range" id="vz-scrub" min="0" max="0" step="1" value="0" aria-label="Step">
+      </div>
+      <p class="vz-count" id="vz-count">1 / 1</p>
+      <div class="vz-speed seg-group" role="group" aria-label="Speed">
+        <button class="seg" type="button" data-speed="0.5" aria-pressed="false">0.5×</button>
+        <button class="seg" type="button" data-speed="1" aria-pressed="true">1×</button>
+        <button class="seg" type="button" data-speed="2" aria-pressed="false">2×</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="vz-output" aria-label="Output" data-ui>
+    <div class="out-card out-result">
+      <p class="out-head">Result</p>
+      <p class="out-line" id="vz-result">ten keys, then 27</p>
+      <p class="out-cost" id="vz-cost"></p>
+    </div>
+    <div class="out-card out-keys">
+      <p class="out-head" id="vz-out-name">keys in order</p>
+      <ol class="chips" id="vz-chips"></ol>
+    </div>
+    <dl class="out-card out-stats">
+      <div><dt>keys</dt><dd id="vz-n">0</dd></div>
+      <div><dt>AVL height</dt><dd id="vz-h-avl">0</dd></div>
+      <div class="is-red"><dt>plain BST</dt><dd id="vz-h-bst">0</dd></div>
+      <div><dt>shortest</dt><dd id="vz-h-best">0</dd></div>
+      <div><dt>AVL worst</dt><dd id="vz-h-worst">0</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- 5. the four rotations, each one looping, on a black page -->
+<section class="rot section" id="rotations" aria-labelledby="rot-title">
+  <header class="sec-head axis">
+    <div class="side"><p class="side-note reveal">Press play on a case to run it in the visualiser.</p></div>
+    <div class="main">
+      <h2 id="rot-title" class="h2 reveal">Four ways to tip.<br>Two ways to fix.</h2>
+      <p class="sec-line reveal">When one side runs two levels taller, the shape of the lean picks the fix. A straight lean takes one rotation; a bent one takes two.</p>
+    </div>
+  </header>
+  <div class="rot-grid">
+    <article class="rot-tile reveal" data-case="ll">
+      <div class="scene"><svg class="rot-svg tv--tile" role="img" aria-label="Left-left: 30, 20, 10 go in. 30 tips to plus 2 and one right rotation lifts 20 to the top."></svg></div>
+      <div class="rot-foot">
+        <h3 class="rot-name">Left-left</h3>
+        <p class="rot-keys">30, 20, 10</p>
+        <p class="rot-fix">One right rotation</p>
+        <button class="rot-watch" type="button" data-watch="ll" aria-label="Watch left-left in the visualiser"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5.2v9.6a.8.8 0 0 0 1.2.68l7.4-4.8a.8.8 0 0 0 0-1.36l-7.4-4.8A.8.8 0 0 0 7 5.2z"/></svg></button>
+      </div>
+    </article>
+    <article class="rot-tile reveal" data-case="rr">
+      <div class="scene"><svg class="rot-svg tv--tile" role="img" aria-label="Right-right: 10, 20, 30 go in. 10 tips to minus 2 and one left rotation lifts 20 to the top."></svg></div>
+      <div class="rot-foot">
+        <h3 class="rot-name">Right-right</h3>
+        <p class="rot-keys">10, 20, 30</p>
+        <p class="rot-fix">One left rotation</p>
+        <button class="rot-watch" type="button" data-watch="rr" aria-label="Watch right-right in the visualiser"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5.2v9.6a.8.8 0 0 0 1.2.68l7.4-4.8a.8.8 0 0 0 0-1.36l-7.4-4.8A.8.8 0 0 0 7 5.2z"/></svg></button>
+      </div>
+    </article>
+    <article class="rot-tile reveal" data-case="lr">
+      <div class="scene"><svg class="rot-svg tv--tile" role="img" aria-label="Left-right: 30, 10, 20 go in. A bend: rotate left at 10, then right at 30."></svg></div>
+      <div class="rot-foot">
+        <h3 class="rot-name">Left-right</h3>
+        <p class="rot-keys">30, 10, 20</p>
+        <p class="rot-fix">Left at 10, then right</p>
+        <button class="rot-watch" type="button" data-watch="lr" aria-label="Watch left-right in the visualiser"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5.2v9.6a.8.8 0 0 0 1.2.68l7.4-4.8a.8.8 0 0 0 0-1.36l-7.4-4.8A.8.8 0 0 0 7 5.2z"/></svg></button>
+      </div>
+    </article>
+    <article class="rot-tile reveal" data-case="rl">
+      <div class="scene"><svg class="rot-svg tv--tile" role="img" aria-label="Right-left: 10, 30, 20 go in. A bend: rotate right at 30, then left at 10."></svg></div>
+      <div class="rot-foot">
+        <h3 class="rot-name">Right-left</h3>
+        <p class="rot-keys">10, 30, 20</p>
+        <p class="rot-fix">Right at 30, then left</p>
+        <button class="rot-watch" type="button" data-watch="rl" aria-label="Watch right-left in the visualiser"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5.2v9.6a.8.8 0 0 0 1.2.68l7.4-4.8a.8.8 0 0 0 0-1.36l-7.4-4.8A.8.8 0 0 0 7 5.2z"/></svg></button>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- 6. what it costs: a ledger of heights -->
+<section class="cx section" id="complexity" aria-labelledby="cx-title">
+  <div class="cx-grid">
+    <div class="cx-head">
+      <h2 id="cx-title" class="h2 reveal"><span class="soft">Never taller</span><br>than 1.44 log n.</h2>
+      <p class="sec-line reveal">Drag the slider to grow the tree. The figures are worst cases: the tallest each kind of tree can get with that many keys.</p>
+    </div>
+    <dl class="ledger reveal">
+      <div class="row"><dt>keys in the tree</dt><dd><output id="cx-n-out" for="cx-n">1,000</output></dd></div>
+      <div class="row"><dt>levels at most, AVL tree</dt><dd id="cx-avl">14</dd></div>
+      <div class="row"><dt>levels, perfectly balanced</dt><dd id="cx-perfect">10</dd></div>
+      <div class="row is-red"><dt>levels at worst, plain BST</dt><dd id="cx-bst">1,000</dd></div>
+    </dl>
+  </div>
+  <figure class="cx-chart reveal">
+    <svg class="cx-svg" id="cx-svg" role="img" aria-label="Tree height against the number of keys. A plain search tree can grow as tall as the number of keys. An AVL tree stays under 1.44 times log base 2 of n."></svg>
+    <label class="sr-only" for="cx-n">Number of keys</label>
+    <input class="range range--big" type="range" id="cx-n" min="0" max="6" step="0.01" value="3">
+  </figure>
+  <div class="ops-wrap axis">
+    <div class="side"><h3 class="h3 reveal">Running time and space</h3></div>
+    <ul class="ops main reveal" aria-label="Running time and space">
+      <li class="op"><span class="op-o">O(log n)</span><span class="op-name">Search</span><span class="op-note">One path, root to leaf.</span></li>
+      <li class="op"><span class="op-o">O(log n)</span><span class="op-name">Insert</span><span class="op-note">At most one fix, single or double.</span></li>
+      <li class="op"><span class="op-o">O(log n)</span><span class="op-name">Delete</span><span class="op-note">May rotate at every level on the way up.</span></li>
+      <li class="op"><span class="op-o op-o--red">O(1)</span><span class="op-name">Rotation</span><span class="op-note">Three links move. Nothing else does.</span></li>
+      <li class="op"><span class="op-o">O(n)</span><span class="op-name">Traversal</span><span class="op-note">Every key once, in any of four orders.</span></li>
+      <li class="op"><span class="op-o">O(n)</span><span class="op-name">Space</span><span class="op-note">One node per key, plus a log n stack.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 7. the C underneath -->
+<section class="hood section" id="hood" aria-labelledby="hood-title">
+  <header class="sec-head axis">
+    <div class="side"><p class="side-note reveal">Source, bridge and tests are all in this site&rsquo;s src and test folders.</p></div>
+    <div class="main">
+      <h2 id="hood-title" class="h2 reveal">Written in C.</h2>
+      <p class="sec-line reveal">avl.c keeps the tree in a fixed array of thirty-one nodes, with no malloc. It is compiled to WebAssembly, and the page only draws the steps the C code reports.</p>
+    </div>
+  </header>
+  <div class="hood-grid">
+    <figure class="hood-photos reveal">
+      <img class="hood-photo hood-photo--a" src="assets/web/g-besm6.jpg" alt="A BESM-6 mainframe on display: tall cabinets in a horseshoe around a long console desk" width="1500" height="1000" loading="lazy">
+      <img class="hood-photo hood-photo--b" src="assets/web/g-console.jpg" alt="Close view of the BESM-6 console: rows of square push buttons and lamps" width="1100" height="1100" loading="lazy">
+      <figcaption>A BESM-6, the Soviet computer of the late 1960s, at the Science Museum, London, and its console.</figcaption>
+    </figure>
+    <div class="window reveal">
+      <div class="window-bar">
+        <div class="tabs" role="tablist" aria-label="Source files">
+          <button class="tab" role="tab" id="tab-core" aria-selected="true" aria-controls="panel-core" type="button">avl.c</button>
+          <button class="tab" role="tab" id="tab-bridge" aria-selected="false" aria-controls="panel-bridge" tabindex="-1" type="button">avl.js</button>
+          <button class="tab" role="tab" id="tab-tests" aria-selected="false" aria-controls="panel-tests" tabindex="-1" type="button">test_avl.c</button>
+        </div>
+      </div>
+      <div class="hood-panel" id="panel-core" role="tabpanel" aria-labelledby="tab-core">
+        <pre class="hood-code"><code><span class="c">// every step is logged with a snapshot</span>
+<span class="k">static int</span> rotate_right(<span class="k">int</span> y) {
+    <span class="k">int</span> x = node[y].left;
+    node[y].left = node[x].right;
+    node[x].right = y;
+    update_height(y);
+    update_height(x);
+    rotations++;
+    <span class="k">return</span> x;
+}</code></pre>
+      </div>
+      <div class="hood-panel" id="panel-bridge" role="tabpanel" aria-labelledby="tab-bridge" hidden>
+        <pre class="hood-code"><code><span class="c">// the page calls into the C module</span>
+<span class="k">const</span> tree = <span class="k">await</span> AVL.Tree.create();
+<span class="k">const</span> steps = tree.insert(27);  <span class="c">// avl_insert, in C</span>
+steps[0].type;                  <span class="c">// 1, EV_START</span>
+steps.at(-1).d;                 <span class="c">// rotations, from EV_DONE</span></code></pre>
+      </div>
+      <div class="hood-panel" id="panel-tests" role="tabpanel" aria-labelledby="tab-tests" hidden>
+        <pre class="hood-code"><code><span class="c">// 20,030 checks against a plain array, none failed</span>
+case_rotation(<span class="s">"left-left  (30, 20, 10)"</span>, 30, 20, 10, 1);
+case_rotation(<span class="s">"right-right(10, 20, 30)"</span>, 10, 20, 30, 1);
+case_rotation(<span class="s">"left-right (30, 10, 20)"</span>, 30, 10, 20, 2);
+case_rotation(<span class="s">"right-left (10, 30, 20)"</span>, 10, 30, 20, 2);</code></pre>
+      </div>
+      <div class="window-foot">
+        <button class="btn btn--small" type="button" id="hood-verify">Check the live tree</button>
+        <p class="hood-out" id="hood-verify-out" role="status">Runs <code>avl_check()</code> on the tree in the visualiser.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot" aria-labelledby="foot-title">
+  <h2 id="foot-title" class="sr-only">About this page</h2>
+  <div class="foot-top">
+    <div class="foot-notes">
+      <p><b>AVL Tree</b><br>An interactive guide to self-balancing trees.<br>C, WebAssembly, and a little curiosity.</p>
+      <p><b>Made by <a href="https://github.com/anshcantcode">Ansh</a></b><br><a href="https://github.com/anshcantcode/avl-tree">Source on GitHub</a><br>Open source · <a href="LICENSE">MIT license</a></p>
+    </div>
+    <button class="to-top" type="button" id="to-top">Back to the top</button>
+  </div>
+  <a class="foot-line" href="src/avl.c">Read avl.c</a>
+  <div class="foot-meta">
+    <ul class="foot-credits" aria-label="Picture credits">
+      <li><a href="https://www.metmuseum.org/art/collection/search/283089">[Tree]</a>, Horatio Ross, about 1858, The Met, CC0</li>
+      <li><a href="https://www.metmuseum.org/art/collection/search/287851">[Banian Tree]</a>, R. B. Hill, 1850s, The Met, CC0</li>
+      <li><a href="https://www.metmuseum.org/art/collection/search/629597">Balance scale</a>, Henry N. Hooper and Company, The Met, CC0</li>
+      <li><a href="https://commons.wikimedia.org/wiki/File:BESM-6_(London_Science_Museum).jpg">BESM-6</a>, Victor R. Ruiz, <a href="https://creativecommons.org/licenses/by/2.0">CC BY 2.0</a></li>
+      <li><a href="https://commons.wikimedia.org/wiki/File:Console_BESM-6_BRUS.jpg">Console BESM-6</a>, Kristopher Doern, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a></li>
+    </ul>
+    <p class="foot-year">Pictures cropped and shown in greyscale.<br>© 2026 Ansh. Code released under the MIT license.</p>
+  </div>
+</footer>
+
+<script src="js/avl-wasm.js"></script>
+<script src="js/avl.js"></script>
+<script src="js/view.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
