@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 New-Item -ItemType Directory -Force build | Out-Null
 
-python -m ziglang cc --target=wasm32-freestanding -O2 -nostdlib "-Wl,--no-entry" "-Wl,--export-dynamic" -o build/avl.wasm src/avl.c
+python -m ziglang cc --target=wasm32-freestanding -O2 -nostdlib "-Wl,--no-entry" "-Wl,--export-dynamic" "-Wl,--strip-all" -o build/avl.wasm src/avl.c
 if ($LASTEXITCODE) { throw "wasm build failed" }
 
 # The page embeds the module as base64, so it also works when index.html is opened straight from disk.
