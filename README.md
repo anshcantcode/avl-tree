@@ -1,6 +1,6 @@
 # AVL Tree — Always in Balance
 
-An interactive guide to self-balancing binary search trees, by [Ansh](https://github.com/anshcantcode).
+An interactive guide to self-balancing binary search trees, by [Ansh](https://github.com/anshcantcode) and [Anjelina](https://github.com/anjylearns-23).
 
 **[Open the visualizer](https://anshcantcode.github.io/avl-tree/)** · [C implementation](src/avl.c) · [MIT license](LICENSE)
 
